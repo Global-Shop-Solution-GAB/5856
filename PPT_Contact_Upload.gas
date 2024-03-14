@@ -1,0 +1,123 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.iRowCnt.Declare(Long)
+V.Local.i.Declare(Long)
+V.Local.sRow.Declare(String)
+V.Local.sQuery.Declare(String)
+
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+F.Intrinsic.Control.If(V.Passed.DELETEALL,=,"Y")
+	F.ODBC.Connection!conx.Execute("Delete From CRM_UF_VALUE")
+	F.ODBC.Connection!conx.Execute("Delete From CRM_Contact_AUX")
+F.Intrinsic.Control.EndIf
+
+'Loads name of BDF and ID into memory
+F.Intrinsic.BDF.Load("AUX001","AUX001")
+'Copies structure of BDF and given the name "Clone"
+F.Intrinsic.BDF.Clone("AUX001","Clone")
+'Returns the number of rows of BDF and returns it to iRowCnt
+F.Intrinsic.BDF.ReadRowCount("AUX001",V.Local.iRowCnt)
+'Subtract 1 row to count rows starting from row 0 instead of counting from row 1 (ex: 0, 1, 2, 3 not (1,2,3))
+F.Intrinsic.Math.Sub(V.Local.iRowCnt,1,V.Local.iRowCnt)
+'Starting from 0 and looping through each row, 1 row at a time.
+F.Intrinsic.Control.For(V.Local.i,0,V.Local.iRowCnt,1)
+	'Reads data from AUX002
+	F.Intrinsic.BDF.ReadRow("AUX001",V.Local.i,V.Local.sRow)
+	'String delimiter(|~|) splits row from a string into array
+	F.Intrinsic.String.Split(V.Local.sRow,"|~|",V.Local.sRow)
+
+	F.Intrinsic.String.Concat("Select * From CRM_UF_VALUE where CID=",V.Local.sRow(2),V.Local.sQuery)
+	F.ODBC.Connection!conx.OpenLocalRecordsetRW("rst",V.Local.sQuery)
+	F.Intrinsic.Control.If(V.ODBC.conx!rst.EOF,=,True)
+		F.ODBC.conx!rst.AddNew
+	F.Intrinsic.Control.EndIf
+
+	F.ODBC.conx!rst.Set!CompID(V.Local.sRow(0))
+	F.ODBC.conx!rst.Set!Type(12)
+	F.Intrinsic.Control.SelectCase(V.Local.sRow(1))
+		F.Intrinsic.Control.Case("C")
+			F.ODBC.conx!rst.Set!CompType(15)
+		F.Intrinsic.Control.Case("V")
+			F.ODBC.conx!rst.Set!CompType(10)
+		F.Intrinsic.Control.Case("P")
+			F.ODBC.conx!rst.Set!CompType(18)
+		F.Intrinsic.Control.Case("S")
+			F.ODBC.conx!rst.Set!CompType(19)
+		F.Intrinsic.Control.CaseElse
+			F.ODBC.conx!rst.Set!CompType(0)
+	F.Intrinsic.Control.EndSelect
+
+	F.ODBC.conx!rst.Set!CID(V.Local.sRow(2))
+	F.ODBC.conx!rst.Set!UF1(V.Local.sRow(14).left30)
+	F.ODBC.conx!rst.Set!UF2(V.Local.sRow(15).left30)
+	F.ODBC.conx!rst.Set!UF3(V.Local.sRow(16).left30)
+	F.ODBC.conx!rst.Set!UF4(V.Local.sRow(17).left30)
+	F.ODBC.conx!rst.Set!UF5(V.Local.sRow(18).left30)
+	F.ODBC.conx!rst.Set!UF6(V.Local.sRow(19).left30)
+	F.ODBC.conx!rst.Set!UF7(V.Local.sRow(20).left30)
+	F.ODBC.conx!rst.Set!UF8(V.Local.sRow(21).left30)
+	F.ODBC.conx!rst.Set!UF9(V.Local.sRow(22).left30)
+	F.ODBC.conx!rst.Set!UF10(V.Local.sRow(23).left30)
+	F.ODBC.conx!rst.Set!UF11(V.Local.sRow(24).left30)
+	F.ODBC.conx!rst.Set!UF12(V.Local.sRow(25).left30)
+	F.ODBC.conx!rst.Set!UF13(V.Local.sRow(26).left30)
+	F.ODBC.conx!rst.Set!UF14(V.Local.sRow(27).left30)
+	F.ODBC.conx!rst.Set!UF15(V.Local.sRow(28).left30)
+	F.ODBC.conx!rst.Set!UF16(V.Local.sRow(29).left30)
+	
+	F.ODBC.conx!rst.Update
+	F.ODBC.conx!rst.Close
+	
+	
+	F.Intrinsic.String.Concat("Select * From CRM_Contact_AUX where CID=",V.Local.sRow(2),V.Local.sQuery)
+	F.ODBC.Connection!conx.OpenLocalRecordsetRW("rst",V.Local.sQuery)
+	F.Intrinsic.Control.If(V.ODBC.conx!rst.EOF,=,True)
+		F.ODBC.conx!rst.AddNew
+	F.Intrinsic.Control.EndIf
+	
+	F.ODBC.conx!rst.Set!CID(V.Local.sRow(2))
+	F.ODBC.conx!rst.Set!ShipToID(V.Local.sRow(3))
+	F.ODBC.conx!rst.Set!PRIM_SHIPTO_CONTACT(V.Local.sRow(4))
+	F.ODBC.conx!rst.Set!PRIM_ADDRESS3(V.Local.sRow(5).left50)
+	F.ODBC.conx!rst.Set!PRIM_ADDRESS4(V.Local.sRow(6).left50)
+	F.ODBC.conx!rst.Set!PRIM_ADDRESS5(V.Local.sRow(7).left50)
+	F.ODBC.conx!rst.Set!PRIM_COUNTRY(V.Local.sRow(8).left12)
+	F.ODBC.conx!rst.Set!SHIPTO_ADDRESS3(V.Local.sRow(9).left50)
+	F.ODBC.conx!rst.Set!SHIPTO_ADDRESS4(V.Local.sRow(10).left50)
+	F.ODBC.conx!rst.Set!SHIPTO_ADDRESS5(V.Local.sRow(11).left50)
+	F.ODBC.conx!rst.Set!SHIPTO_COUNTRY(V.Local.sRow(12).left12)
+	F.ODBC.conx!rst.Set!INTERCEPT(V.Local.sRow(13))
+
+	F.ODBC.conx!rst.Update
+	F.ODBC.conx!rst.Close
+
+'Loops thru all records until no records exist
+F.Intrinsic.Control.Next(V.Local.i)
+
+F.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: PPT_Contact_Upload.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.Debug.SetLA(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$$}$JESSICA$}$5/13/2016 2:48:37 PM
+Program.Sub.Comments.End
+
